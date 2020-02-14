@@ -1,0 +1,16 @@
+{
+  "name": "visuexperimage",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chart.js": "^2.9.3",
+    "chartjs-plugin-error-bars": "^1.2.2"
+  }
+}
