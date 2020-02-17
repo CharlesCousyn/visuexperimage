@@ -17,27 +17,44 @@ window.addEventListener("load",() =>
             {
                 fileJSON = JSON.parse(event.target.result);
 
-                updateSelect(fileJSON);
+                updateSelects(fileJSON);
 
-                const select = document.getElementById("selectCriterion");
-                select.addEventListener("change",
+                //Listener select criterion
+                const selectCriterion = document.getElementById("selectCriterion");
+                selectCriterion.addEventListener("change",
                         () =>
                         {
-                            loadedConfig = fileJSON[select.options[select.selectedIndex].value];
+                            loadedConfig = fileJSON[selectCriterion.options[selectCriterion.selectedIndex].value];
                             console.log("loadedConfig", loadedConfig);
                             chart(loadedConfig);
-                        })
+                        });
+
+                //Listener select criterion
+                const selectConfig = document.getElementById("selectConfig");
+                selectConfig.addEventListener("change",
+                    () =>
+                    {
+                        loadedConfig = fileJSON.perCombination.find(combConf => combConf.combination === selectConfig.options[selectConfig.selectedIndex].value).config;
+                        console.log("loadedConfig", loadedConfig);
+                        chart(loadedConfig);
+                    })
             };
 
             reader.readAsText(file);
         });
 });
 
-function updateSelect(fileJson)
+function updateSelects(fileJson)
 {
-    const select = document.getElementById("selectCriterion");
-    let optionsHTML = ["<option value='' selected disabled hidden>Choisir ici</option>", ...Object.keys(fileJson).map(key => `<option value='${key}'> ${key}</option>`)];
-    select.innerHTML = optionsHTML.join("");
+    //Update select criterion
+    const selectCriterion = document.getElementById("selectCriterion");
+    let optionsHTMLCriterion = ["<option value='' selected disabled hidden>Choose Criterion</option>", ...Object.keys(fileJson).filter(key => key !== "perCombination").map(key => `<option value='${key}'> ${key}</option>`)];
+    selectCriterion.innerHTML = optionsHTMLCriterion.join("");
+
+    //Update select config
+    const selectConfig = document.getElementById("selectConfig");
+    let optionsHTMLConfig = ["<option value='' selected disabled hidden>Choose config</option>", fileJson.perCombination.map(combConf => `<option value='${combConf.combination}'> ${combConf.combination}</option>`)];
+    selectConfig.innerHTML = optionsHTMLConfig.join("");
 }
 
 function chart(loadedConfig)
