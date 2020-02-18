@@ -64,18 +64,19 @@ function updateConfig(loadedConfig)
     if(loadedConfig.options.tooltips !== undefined && loadedConfig.options.tooltips.callbacks !== undefined && loadedConfig.options.tooltips.callbacks.label !== undefined)
     {
         const label = loadedConfig.options.tooltips.callbacks.label;
-        switch (label)
+        if(typeof label !== "function")
         {
-            case "callbackGlobal":
-                console.log("callbackGlobal");
-                loadedConfig.options.tooltips.callbacks.label = callbackGlobal;
-                break;
-            case "callbackCombination":
-                console.log("callbackCombination");
-                loadedConfig.options.tooltips.callbacks.label = callbackCombination;
-                break;
-            default:
-                throw new Error("Bad callback name");
+            switch (label)
+            {
+                case "callbackGlobal":
+                    loadedConfig.options.tooltips.callbacks.label = callbackGlobal;
+                    break;
+                case "callbackCombination":
+                    loadedConfig.options.tooltips.callbacks.label = callbackCombination;
+                    break;
+                default:
+                    throw new Error("Bad callback name");
+            }
         }
     }
     return loadedConfig;
