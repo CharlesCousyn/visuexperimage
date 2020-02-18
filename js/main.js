@@ -25,6 +25,7 @@ window.addEventListener("load",() =>
                         () =>
                         {
                             loadedConfig = fileJSON[selectCriterion.options[selectCriterion.selectedIndex].value];
+                            loadedConfig = updateConfig(loadedConfig);
                             console.log("loadedConfig", loadedConfig);
                             chart(loadedConfig);
                         });
@@ -35,6 +36,7 @@ window.addEventListener("load",() =>
                     () =>
                     {
                         loadedConfig = fileJSON.perCombination.find(combConf => combConf.combination === selectConfig.options[selectConfig.selectedIndex].value).config;
+                        loadedConfig = updateConfig(loadedConfig);
                         console.log("loadedConfig", loadedConfig);
                         chart(loadedConfig);
                     })
@@ -55,6 +57,48 @@ function updateSelects(fileJson)
     const selectConfig = document.getElementById("selectConfig");
     let optionsHTMLConfig = ["<option value='' selected disabled hidden>Choose config</option>", fileJson.perCombination.map(combConf => `<option value='${combConf.combination}'> ${combConf.combination}</option>`)];
     selectConfig.innerHTML = optionsHTMLConfig.join("");
+}
+
+function updateConfig(loadedConfig)
+{
+    if(loadedConfig.options.tooltips !== undefined && loadedConfig.options.tooltips.callbacks !== undefined && loadedConfig.options.tooltips.callbacks.label !== undefined)
+    {
+        const label = loadedConfig.options.tooltips.callbacks.label;
+        switch (label)
+        {
+            case "callbackGlobal":
+                console.log("callbackGlobal");
+                loadedConfig.options.tooltips.callbacks.label = callbackGlobal;
+                break;
+            case "callbackCombination":
+                console.log("callbackCombination");
+                loadedConfig.options.tooltips.callbacks.label = callbackCombination;
+                break;
+            default:
+                throw new Error("Bad callback name");
+        }
+    }
+    return loadedConfig;
+}
+
+function callbackGlobal(tooltipItem, data)
+{
+    let mean = 0.0;
+    let sdMAP = 0.0;
+    mean = data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].y;
+    sdMAP = data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].sdMAP;
+
+    return ["Mean: " + mean, "Standard Deviation: " + sdMAP];
+}
+
+function callbackCombination(tooltipItem, data)
+{
+    let AP = 0.0;
+    let recognizableObjectRate = 0.0;
+    AP = data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].y;
+    recognizableObjectRate = data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].recognizableObjectRate;
+
+    return ["AP: " + AP, "recognizableObjectRate: " + recognizableObjectRate];
 }
 
 function chart(loadedConfig)
