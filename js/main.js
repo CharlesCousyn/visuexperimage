@@ -1,10 +1,10 @@
 let fileJSON;
 let loadedConfig;
 let myChart;
+let nameUsedMetric;
 
 window.addEventListener("load",() =>
 {
-    console.log("fileJSON");
     document.getElementById('loadFileButton')
         .addEventListener(
         'change',
@@ -24,8 +24,9 @@ window.addEventListener("load",() =>
                 selectCriterion.addEventListener("change",
                         () =>
                         {
-                            loadedConfig = fileJSON[selectCriterion.options[selectCriterion.selectedIndex].value];
-                            loadedConfig = updateConfig(loadedConfig);
+                            loadedConfig = fileJSON.perCriterion.find(critConf => critConf.criterion === selectCriterion.options[selectCriterion.selectedIndex].value).config;
+                            nameUsedMetric = fileJSON.metricsNames.find(name => name === selectMetric.options[selectMetric.selectedIndex].value);
+                            loadedConfig = updateConfig(loadedConfig, nameUsedMetric);
                             console.log("loadedConfig", loadedConfig);
                             chart(loadedConfig);
                         });
@@ -36,9 +37,24 @@ window.addEventListener("load",() =>
                     () =>
                     {
                         loadedConfig = fileJSON.perCombination.find(combConf => combConf.combination === selectConfig.options[selectConfig.selectedIndex].value).config;
-                        loadedConfig = updateConfig(loadedConfig);
+                        nameUsedMetric = fileJSON.metricsNames.find(name => name === selectMetric.options[selectMetric.selectedIndex].value);
+                        loadedConfig = updateConfig(loadedConfig, nameUsedMetric);
                         console.log("loadedConfig", loadedConfig);
                         chart(loadedConfig);
+                    });
+
+                //Listener select criterion
+                const selectMetric = document.getElementById("selectMetric");
+                selectMetric.addEventListener("change",
+                    () =>
+                    {
+                        nameUsedMetric = fileJSON.metricsNames.find(name => name === selectMetric.options[selectMetric.selectedIndex].value);
+                        if(loadedConfig !== undefined)
+                        {
+                            loadedConfig = updateConfig(loadedConfig, nameUsedMetric);
+                            console.log("loadedConfig", loadedConfig);
+                            chart(loadedConfig);
+                        }
                     })
             };
 
@@ -50,17 +66,23 @@ function updateSelects(fileJson)
 {
     //Update select criterion
     const selectCriterion = document.getElementById("selectCriterion");
-    let optionsHTMLCriterion = ["<option value='' selected disabled hidden>Choose Criterion</option>", ...Object.keys(fileJson).filter(key => key !== "perCombination").map(key => `<option value='${key}'> ${key}</option>`)];
+    let optionsHTMLCriterion = ["<option value='' selected disabled hidden>Choose Criterion</option>", ...fileJson.perCriterion.map(obj => `<option value='${obj.criterion}'> ${obj.criterion}</option>`)];
     selectCriterion.innerHTML = optionsHTMLCriterion.join("");
 
     //Update select config
     const selectConfig = document.getElementById("selectConfig");
-    let optionsHTMLConfig = ["<option value='' selected disabled hidden>Choose config</option>", fileJson.perCombination.map(combConf => `<option value='${combConf.combination}'> ${combConf.combination}</option>`)];
+    let optionsHTMLConfig = ["<option value='' selected disabled hidden>Choose config</option>", ...fileJson.perCombination.map(combConf => `<option value='${combConf.combination}'> ${combConf.combination}</option>`)];
     selectConfig.innerHTML = optionsHTMLConfig.join("");
+
+    //Update select metrics
+    const selectMetric = document.getElementById("selectMetric");
+    let optionsHTMLMetric = fileJson.metricsNames.map((name, index) => `<option${index === 0 ? " selected" : ""} value='${name}'> ${name}</option>`);
+    selectMetric.innerHTML = optionsHTMLMetric.join("");
 }
 
-function updateConfig(loadedConfig)
+function updateConfig(loadedConfig, nameUsedMetric)
 {
+    //Update tooltip callback
     if(loadedConfig.options.tooltips !== undefined && loadedConfig.options.tooltips.callbacks !== undefined && loadedConfig.options.tooltips.callbacks.label !== undefined)
     {
         const label = loadedConfig.options.tooltips.callbacks.label;
@@ -79,6 +101,30 @@ function updateConfig(loadedConfig)
             }
         }
     }
+
+    //Update y in dataset
+    loadedConfig.data.datasets.forEach(dataset =>
+    {
+        //Update data attribute
+        dataset.data.forEach(oneData =>
+        {
+            let nameGoodMetric = Object.keys(oneData)
+                .map(key => key.split("_"))
+                .filter(arr => arr[arr.length - 1] === nameUsedMetric)[0].join("_");
+            oneData.y = oneData[nameGoodMetric];
+        });
+
+        //Update error bars
+        if(dataset.allErrorBars !== undefined)
+        {
+            let nameGoodMetric = Object.keys(dataset.allErrorBars)
+                .map(key => key.split("_"))
+                .filter(arr => arr[arr.length - 1] === nameUsedMetric)[0].join("_");
+            dataset.errorBars = dataset.allErrorBars[nameGoodMetric];
+        }
+
+    });
+
     return loadedConfig;
 }
 
