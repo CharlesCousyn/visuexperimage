@@ -88,21 +88,11 @@ function updateConfig(loadedConfig, nameUsedMetric)
         const label = loadedConfig.options.tooltips.callbacks.label;
         if(typeof label !== "function")
         {
-            switch (label)
-            {
-                case "callbackGlobal":
-                    loadedConfig.options.tooltips.callbacks.label = callbackGlobal;
-                    break;
-                case "callbackCombination":
-                    loadedConfig.options.tooltips.callbacks.label = callbackCombination;
-                    break;
-                default:
-                    throw new Error("Bad callback name");
-            }
+            loadedConfig.options.tooltips.callbacks.label = callback;
         }
     }
 
-    //Update y in dataset
+    //Update y and error bars in dataset
     loadedConfig.data.datasets.forEach(dataset =>
     {
         //Update data attribute
@@ -128,24 +118,10 @@ function updateConfig(loadedConfig, nameUsedMetric)
     return loadedConfig;
 }
 
-function callbackGlobal(tooltipItem, data)
+function callback(tooltipItem, data)
 {
-    let mean = 0.0;
-    let sdMAP = 0.0;
-    mean = data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].y;
-    sdMAP = data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].sdMAP;
-
-    return ["Mean: " + mean, "Standard Deviation: " + sdMAP];
-}
-
-function callbackCombination(tooltipItem, data)
-{
-    let AP = 0.0;
-    let recognizableObjectRate = 0.0;
-    AP = data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].y;
-    recognizableObjectRate = data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].recognizableObjectRate;
-
-    return ["AP: " + AP, "recognizableObjectRate: " + recognizableObjectRate];
+    let dataObj = data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index];
+    return Object.keys(dataObj).filter(key => key !== "x" && key !== "y"  && key !== "criterionValue").map(key => `${key}: ${dataObj[key]}`);
 }
 
 function chart(loadedConfig)
