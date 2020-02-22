@@ -2,6 +2,7 @@ let fileJSON;
 let loadedConfig;
 let myChart;
 let nameUsedMetric;
+let idCriterionToSort;
 
 window.addEventListener("load",() =>
 {
@@ -25,25 +26,29 @@ window.addEventListener("load",() =>
                         () =>
                         {
                             loadedConfig = fileJSON.perCriterion.find(critConf => critConf.criterion === selectCriterion.options[selectCriterion.selectedIndex].value).config;
+                            updateSelectCriterionToSort(loadedConfig);
                             nameUsedMetric = fileJSON.metricsNames.find(name => name === selectMetric.options[selectMetric.selectedIndex].value);
-                            loadedConfig = updateConfig(loadedConfig, nameUsedMetric);
+                            const selectCriterionToSort = document.getElementById("selectCriterionToSort");
+                            idCriterionToSort = selectCriterionToSort.options[selectCriterionToSort.selectedIndex].value;
+                            loadedConfig = updateConfig(loadedConfig, nameUsedMetric, idCriterionToSort);
                             console.log("loadedConfig", loadedConfig);
                             chart(loadedConfig);
                         });
 
-                //Listener select criterion
+                //Listener select config
                 const selectConfig = document.getElementById("selectConfig");
                 selectConfig.addEventListener("change",
                     () =>
                     {
                         loadedConfig = fileJSON.perCombination.find(combConf => combConf.combination === selectConfig.options[selectConfig.selectedIndex].value).config;
+                        updateSelectCriterionToSort(loadedConfig);
                         nameUsedMetric = fileJSON.metricsNames.find(name => name === selectMetric.options[selectMetric.selectedIndex].value);
-                        loadedConfig = updateConfig(loadedConfig, nameUsedMetric);
+                        loadedConfig = updateConfig(loadedConfig, nameUsedMetric, 0);
                         console.log("loadedConfig", loadedConfig);
                         chart(loadedConfig);
                     });
 
-                //Listener select criterion
+                //Listener select metric
                 const selectMetric = document.getElementById("selectMetric");
                 selectMetric.addEventListener("change",
                     () =>
@@ -51,11 +56,26 @@ window.addEventListener("load",() =>
                         nameUsedMetric = fileJSON.metricsNames.find(name => name === selectMetric.options[selectMetric.selectedIndex].value);
                         if(loadedConfig !== undefined)
                         {
-                            loadedConfig = updateConfig(loadedConfig, nameUsedMetric);
+                            loadedConfig = updateConfig(loadedConfig, nameUsedMetric, 0);
+                            updateSelectCriterionToSort(loadedConfig);
                             console.log("loadedConfig", loadedConfig);
                             chart(loadedConfig);
                         }
-                    })
+                    });
+
+                //Listener select criterion to sort
+                const selectCriterionToSort = document.getElementById("selectCriterionToSort");
+                selectCriterionToSort.addEventListener("change",
+                    () =>
+                    {
+                        idCriterionToSort = selectCriterionToSort.options[selectCriterionToSort.selectedIndex].value;
+                        if(loadedConfig !== undefined)
+                        {
+                            loadedConfig = updateConfig(loadedConfig, nameUsedMetric, idCriterionToSort);
+                            console.log("loadedConfig", loadedConfig);
+                            chart(loadedConfig);
+                        }
+                    });
             };
 
             reader.readAsText(file);
@@ -80,7 +100,15 @@ function updateSelects(fileJson)
     selectMetric.innerHTML = optionsHTMLMetric.join("");
 }
 
-function updateConfig(loadedConfig, nameUsedMetric)
+function updateSelectCriterionToSort(loadedConfig)
+{
+    //Update select criterion to sort
+    const selectCriterionToSort = document.getElementById("selectCriterionToSort");
+    let optionsHTMLCriterionToSort = ["<option value='' selected disabled hidden>Choose Criterion</option>", ...Array.from(Array(loadedConfig.data.datasets[0].data[0].x.split(" ").length).keys()).map(num => `<option${num === 0 ? " selected" : ""} value='${num}'> ${num}</option>`)];
+    selectCriterionToSort.innerHTML = optionsHTMLCriterionToSort.join("");
+}
+
+function updateConfig(loadedConfig, nameUsedMetric, idCriterionToSort)
 {
     //Update tooltip callback
     if(loadedConfig.options.tooltips !== undefined && loadedConfig.options.tooltips.callbacks !== undefined && loadedConfig.options.tooltips.callbacks.label !== undefined)
@@ -114,6 +142,11 @@ function updateConfig(loadedConfig, nameUsedMetric)
         }
 
     });
+
+    //Update sort order
+    let allArrayLabels = loadedConfig.options.scales.xAxes[0].labels.map(string => string.split(" "));
+    allArrayLabels = allArrayLabels.sort((a, b) => a[idCriterionToSort].localeCompare(b[idCriterionToSort], undefined, {numeric: true, sensitivity: 'base'}));
+    loadedConfig.options.scales.xAxes[0].labels = allArrayLabels.map(array => array.join(" "));
 
     return loadedConfig;
 }
