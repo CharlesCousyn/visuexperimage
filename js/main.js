@@ -104,7 +104,7 @@ function updateSelectCriterionToSort(loadedConfig)
 {
     //Update select criterion to sort
     const selectCriterionToSort = document.getElementById("selectCriterionToSort");
-    let optionsHTMLCriterionToSort = ["<option value='' selected disabled hidden>Choose Criterion</option>", ...Array.from(Array(loadedConfig.data.datasets[0].data[0].x.split(" ").length).keys()).map(num => `<option${num === 0 ? " selected" : ""} value='${num}'> ${num}</option>`)];
+    let optionsHTMLCriterionToSort = ["<option value='' disabled hidden>Choose Sort Criterion</option>", ...Array.from(Array(loadedConfig.data.datasets[0].data[0].x.split(" ").length).keys()).map(num => `<option${num === 0 ? " selected" : ""} value='${num}'> ${num}</option>`)];
     selectCriterionToSort.innerHTML = optionsHTMLCriterionToSort.join("");
 }
 
